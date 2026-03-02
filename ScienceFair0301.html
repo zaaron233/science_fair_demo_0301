@@ -1,0 +1,1696 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>How Fast Do You Respond? (ElasticNet Model)</title>
+
+  <style>
+    :root{
+      --bg:#0b1020;
+      --text:#e8ecff;
+      --muted:#a9b2dd;
+      --stroke:rgba(255,255,255,.10);
+      --stroke2:rgba(255,255,255,.16);
+      --accent:#6ea8ff;
+      --accent2:#9b7bff;
+      --shadow: 0 18px 45px rgba(0,0,0,.35);
+      --radius:18px;
+      --danger:#ff7a7a;
+      --fast:#6ea8ff;
+      --slow:#ff9b7a;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; padding:28px;
+      font-family: Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 500px at 15% -10%, rgba(110,168,255,.28), transparent 60%),
+        radial-gradient(900px 500px at 95% 0%, rgba(155,123,255,.24), transparent 55%),
+        radial-gradient(1000px 700px at 55% 120%, rgba(46,229,157,.10), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+    }
+    .wrap{ max-width: 980px; margin:0 auto; }
+
+    .header{ margin-bottom:16px; text-align:center; }
+    h1{ margin:0; font-size:22px; letter-spacing:.2px; }
+    .subhead{
+      margin:6px 0 0;
+      font-size:13px;
+      color:var(--muted);
+      letter-spacing:.3px;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .inner{ padding:18px; }
+
+    .sectionTitle{
+      font-size:14px; font-weight:800; margin:0 0 10px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .dot{
+      width:9px; height:9px; border-radius:999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 3px rgba(110,168,255,.15);
+    }
+    .divider{ height:1px; background: var(--stroke); margin:16px -18px; }
+
+    /* ===== Survey ===== */
+    .surveyBox{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+      border-radius: 14px;
+      padding:14px;
+    }
+    .surveyGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+    }
+    .field{ display:flex; flex-direction:column; gap:6px; }
+    .labelRow{
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap:10px;
+      flex-wrap: wrap;
+    }
+    .label{
+      font-size:12px;
+      color: var(--muted);
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    .valuePill{
+      font-size:12px;
+      color: var(--text);
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      padding:4px 8px;
+      border-radius: 999px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .stress-description {
+      font-size: 11px;
+      color: var(--accent);
+      background: rgba(110,168,255,0.1);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(110,168,255,0.3);
+      white-space: nowrap;
+    }
+    .textInput, .numInput{
+      width:100%;
+      padding:10px 12px;
+      border-radius: 12px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      outline:none;
+      font-size:14px;
+    }
+    .textInput::placeholder{ color: rgba(169,178,221,.75); }
+
+    .radioRow{ display:flex; gap:10px; flex-wrap:wrap; }
+    .radioChip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:9px 12px;
+      border-radius: 999px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+      cursor:pointer;
+      user-select:none;
+      font-size:14px;
+    }
+    .radioChip input{ display:none; }
+    .radioChip[data-checked="true"]{
+      border-color: rgba(110,168,255,.55);
+      background: rgba(110,168,255,.12);
+    }
+
+    .subNote{
+      font-size:12px;
+      color: rgba(169,178,221,.9);
+      line-height:1.5;
+    }
+
+    .rangeRow{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      width:100%;
+    }
+    .slider-wrapper{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .slider-wrapper input[type="range"]{
+      flex:1;
+      accent-color: var(--accent);
+    }
+    .slider-minmax{
+      display:flex;
+      justify-content:space-between;
+      font-size:11px;
+      color:var(--muted);
+      padding:0 2px;
+    }
+    .hidden{ display:none !important; }
+
+    /* Required / error UI */
+    .errorBanner{
+      border:1px solid rgba(255,122,122,.45);
+      background: rgba(255,122,122,.10);
+      color: var(--text);
+      border-radius: 14px;
+      padding:10px 12px;
+      margin-bottom:12px;
+      font-size:13px;
+      line-height:1.5;
+      display:none;
+    }
+    .isError .textInput,
+    .isError .numInput{
+      border-color: rgba(255,122,122,.70);
+      box-shadow: 0 0 0 3px rgba(255,122,122,.10);
+    }
+    .radioError{
+      border:1px solid rgba(255,122,122,.70);
+      border-radius: 14px;
+      padding:8px;
+      background: rgba(255,122,122,.06);
+    }
+
+    /* ===== Activities vertical list ===== */
+    .choices{ display:flex; flex-direction:column; gap:10px; }
+    .chip{
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap:12px;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+      cursor:pointer;
+      user-select:none;
+      transition: border-color .15s ease, background .15s ease;
+      font-size:14px;
+    }
+    .chip:hover{ border-color: var(--stroke2); }
+    .chip:active{ /* no transform */ }
+
+    .chipLeft{ display:flex; align-items:center; gap:10px; min-width:0; flex-wrap:wrap; }
+    .chip .mark{
+      width:16px; height:16px; border-radius:6px;
+      border:1px solid var(--stroke2);
+      background: rgba(0,0,0,.18);
+      display:inline-flex; align-items:center; justify-content:center;
+      flex: 0 0 auto;
+    }
+    .chip .mark::after{
+      content:"";
+      width:8px; height:8px; border-radius:3px;
+      background: transparent;
+      transform: scale(0.6);
+      transition: background .15s ease, transform .15s ease;
+    }
+    .chip[data-selected="true"]{
+      border-color: rgba(110,168,255,.55);
+      background: rgba(110,168,255,.12);
+    }
+    .chip[data-selected="true"] .mark{
+      border-color: rgba(110,168,255,.75);
+      background: rgba(110,168,255,.18);
+    }
+    .chip[data-selected="true"] .mark::after{
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      transform: scale(1.0);
+    }
+
+    .chipName{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    .hourInlineWrap{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      flex: 0 0 auto;
+    }
+
+    .hourInlineWrap.hourDisabled{
+      opacity:.55;
+      pointer-events:none;
+    }
+
+    .hourInlineInput{
+      width:84px;
+      padding:6px 8px;
+      border-radius: 10px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      outline:none;
+      font-size:13px;
+      font-variant-numeric: tabular-nums;
+      box-sizing: border-box;
+    }
+    .hourInlineInput:focus{
+      border-color: rgba(110,168,255,.70);
+      box-shadow: 0 0 0 3px rgba(110,168,255,.12);
+    }
+    .hourInlineUnit{
+      font-size:12px;
+      color: rgba(169,178,221,.95);
+      font-weight:700;
+    }
+
+    .othersBox{
+      margin-top:10px;
+      padding:12px;
+      border:1px dashed rgba(255,255,255,.18);
+      border-radius: 14px;
+      background: rgba(0,0,0,.12);
+    }
+
+    /* Buttons row */
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      margin-top: 14px;
+    }
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; }
+    button{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-size:14px;
+      transition: transform .04s ease, border-color .15s ease, background .15s ease;
+    }
+    button:hover{ border-color: var(--stroke2); }
+    button:active{ transform: scale(0.992); }
+    .primary{
+      border-color: rgba(110,168,255,.55);
+      background: rgba(110,168,255,.14);
+    }
+    .danger{
+      border-color: rgba(255,120,120,.45);
+      background: rgba(255,120,120,.10);
+    }
+
+    /* Interpretation */
+    .fullWidthCard{ grid-column: 1 / -1; }
+    .interpText{
+      margin:0;
+      font-size:15px;
+      line-height:1.7;
+      color:var(--text);
+    }
+    .interpHint{
+      margin-top:10px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.6;
+    }
+  
+    details.scale{
+      margin-top:8px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.02);
+      border-radius: 12px;
+      padding:10px 12px;
+    }
+    details.scale summary{
+      cursor:pointer;
+      color: rgba(169,178,221,.95);
+      font-size:12px;
+      font-weight:700;
+    }
+    .scaleList{
+      margin:10px 0 0;
+      padding-left: 18px;
+      color: rgba(232,236,255,.92);
+      font-size:12px;
+      line-height:1.55;
+    }
+
+    /* ===== UPDATED RESULT STYLING WITH POSITION MARKER ===== */
+    .result-category {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 10px 0 5px;
+    }
+    .result-description {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 15px;
+    }
+    .result-characteristics {
+      list-style-type: none;
+      padding: 0;
+      margin: 10px 0;
+    }
+    .result-characteristics li {
+      margin: 5px 0;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .result-characteristics li::before {
+      content: "•";
+      color: var(--accent);
+      font-size: 16px;
+    }
+    
+    /* Distribution bar with marker */
+    .distribution-container {
+      position: relative;
+      margin: 25px 0 15px;
+      width: 100%;
+    }
+    
+    .distribution-bar {
+      width: 100%;
+      height: 12px;
+      background: linear-gradient(90deg, 
+        #6ea8ff 0%, 
+        #6ea8ff 14.28%,
+        #84b5ff 14.28%,
+        #84b5ff 28.56%,
+        #9b7bff 28.56%,
+        #9b7bff 42.84%,
+        #b57aff 42.84%,
+        #b57aff 57.12%,
+        #d47aff 57.12%,
+        #d47aff 71.4%,
+        #f47a7a 71.4%,
+        #f47a7a 85.68%,
+        #ff5a5a 85.68%,
+        #ff5a5a 100%);
+      border-radius: 20px;
+      position: relative;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    
+    .marker {
+      position: absolute;
+      top: -20px;
+      transform: translateX(-50%);
+      font-size: 24px;
+      filter: drop-shadow(0 0 8px rgba(255,255,255,0.5));
+      z-index: 10;
+      transition: left 0.3s ease;
+      text-shadow: 0 0 10px rgba(255,255,255,0.8);
+    }
+    
+    .marker-line {
+      position: absolute;
+      top: 0;
+      width: 3px;
+      height: 25px;
+      background: white;
+      transform: translateX(-50%);
+      border-radius: 3px;
+      box-shadow: 0 0 15px white;
+      z-index: 5;
+      transition: left 0.3s ease;
+    }
+    
+    .distribution-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 10px;
+      color: var(--muted);
+      text-align: center;
+    }
+    
+    .distribution-labels span {
+      flex: 1;
+    }
+    
+    .time-value {
+      font-size: 36px;
+      font-weight: bold;
+      margin: 5px 0;
+      text-align: center;
+    }
+    
+    .percentile-info {
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+      margin: 10px 0;
+      padding: 8px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 20px;
+    }
+    
+    .model-info {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+      margin-top: 15px;
+      border-top: 1px solid var(--stroke);
+      padding-top: 8px;
+    }
+
+    /* ===== NEW: Log Transform Explanation Section ===== */
+    .log-explanation {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+    }
+    
+    .log-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .log-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    .log-card {
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid var(--stroke);
+    }
+    
+    .log-card h4 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: var(--accent2);
+    }
+    
+    .log-card p {
+      margin: 5px 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    
+    .formula-box {
+      background: rgba(0,0,0,0.3);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 13px;
+      margin: 10px 0;
+      text-align: center;
+      border: 1px solid var(--stroke);
+    }
+    
+    .example-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--stroke);
+      font-size: 12px;
+    }
+    
+    .example-row:last-child {
+      border-bottom: none;
+    }
+    
+    .example-label {
+      color: var(--muted);
+    }
+    
+    .example-value {
+      color: var(--text);
+      font-family: monospace;
+      font-weight: bold;
+    }
+    
+    .benefit-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 5px 0;
+    }
+    
+    .benefit-list li {
+      margin: 8px 0;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .benefit-list li::before {
+      content: "✓";
+      color: var(--accent);
+      font-size: 14px;
+    }
+    
+    @media (max-width: 600px) {
+      .log-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>How Fast Do You Respond?</h1>
+      <p class="subhead">Predict your reaction time using our ElasticNet Regression model | Alexandra Wang</p>
+    </div>
+
+    <div class="layout">
+      <div class="card">
+        <div class="inner">
+
+          <div class="errorBanner" id="errorBanner">
+            Please complete all required questions (1–7) before calculating.
+          </div>
+
+          <!-- Survey -->
+          <div class="surveyBox" id="surveyBox">
+            <div class="surveyGrid">
+
+              <!-- 1 -->
+              <div class="field" id="fieldName">
+                <div class="labelRow">
+                  <div class="label">1) Your name <span style="color:rgba(255,122,122,.9)">*</span></div>
+                </div>
+                <input class="textInput" id="qName" type="text" placeholder="Enter your name" />
+              </div>
+
+              <!-- 2 -->
+              <div class="field" id="fieldGender">
+                <div class="labelRow">
+                  <div class="label">2) Your gender <span style="color:rgba(255,122,122,.9)">*</span></div>
+                </div>
+                <div class="radioRow" id="qGender">
+                  <label class="radioChip" data-checked="false">
+                    <input type="radio" name="gender" value="Male" />
+                    Male
+                  </label>
+                  <label class="radioChip" data-checked="false">
+                    <input type="radio" name="gender" value="Female" />
+                    Female
+                  </label>
+                </div>
+              </div>
+
+              <!-- 3 -->
+              <div class="field" id="fieldAge">
+                <div class="labelRow">
+                  <div class="label">3) Your age <span style="color:rgba(255,122,122,.9)">*</span></div>
+                </div>
+                <input class="numInput" id="qAgeNum" type="number" min="5" max="100" step="1" value="" placeholder="e.g., 18" />
+              </div>
+
+              <!-- 4 Coffee -->
+              <div class="field" id="fieldCoffee">
+                <div class="labelRow">
+                  <div class="label">4) Daily coffee intake (cups) <span style="color:rgba(255,122,122,.9)">*</span></div>
+                </div>
+                <div class="radioRow" id="qCoffee">
+                  <label class="radioChip" data-checked="false">
+                    <input type="radio" name="coffee" value="0" />
+                    0
+                  </label>
+                  <label class="radioChip" data-checked="false">
+                    <input type="radio" name="coffee" value="0.5" />
+                    0.5
+                  </label>
+                  <label class="radioChip" data-checked="false">
+                    <input type="radio" name="coffee" value="1" />
+                    1
+                  </label>
+                  <label class="radioChip" data-checked="false">
+                    <input type="radio" name="coffee" value="1.5" />
+                    1.5
+                  </label>
+                  <label class="radioChip" data-checked="false">
+                    <input type="radio" name="coffee" value="2" />
+                    2 or more
+                  </label>
+                </div>
+              </div>
+
+              <!-- 5 Sleep -->
+              <div class="field" id="fieldSleep">
+                <div class="labelRow">
+                  <div class="label">5) Average sleep (hours) <span style="color:rgba(255,122,122,.9)">*</span></div>
+                  <div class="valuePill"><span id="sleepOut">8.0</span> hrs</div>
+                </div>
+                <div class="rangeRow">
+                  <div class="slider-wrapper">
+                    <span style="font-size:11px; color:var(--muted);">4</span>
+                    <input id="qSleepRange" type="range" min="4" max="14" step="0.5" value="8" />
+                    <span style="font-size:11px; color:var(--muted);">14</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 6 Academic stress - UPDATED with description -->
+              <div class="field" id="fieldAcadStress">
+                <div class="labelRow">
+                  <div class="label">6) Academic stress (1–10) <span style="color:rgba(255,122,122,.9)">*</span></div>
+                  <div class="valuePill"><span id="acadStressOut">1/10</span></div>
+                  <div class="stress-description" id="acadStressDesc">not stressed at all</div>
+                </div>
+                <div class="rangeRow">
+                  <div class="slider-wrapper">
+                    <span style="font-size:11px; color:var(--muted);">1</span>
+                    <input id="qAcadStressRange" type="range" min="1" max="10" step="1" value="1" />
+                    <span style="font-size:11px; color:var(--muted);">10</span>
+                  </div>
+                </div>
+
+                <details class="scale">
+                  <summary>Stress level description</summary>
+                  <ol class="scaleList">
+                    <li>Not stressed at all</li>
+                    <li>Barely stressed once in a while</li>
+                    <li>A little stressed once in a while</li>
+                    <li>Stressed once in a while</li>
+                    <li>Stressed at times but manageable</li>
+                    <li>Stressed frequently but manageable</li>
+                    <li>Very stressed at times but manageable</li>
+                    <li>Very stressed frequently but manageable</li>
+                    <li>Very stressed frequently, need help</li>
+                    <li>Extremely stressed every day, need help</li>
+                  </ol>
+                </details>
+              </div>
+
+              <!-- 7 Extra Curricular Stress - UPDATED with description -->
+              <div class="field" id="fieldExtraStress">
+                <div class="labelRow">
+                  <div class="label">7) Extra-curricular stress (1–10) <span style="color:rgba(255,122,122,.9)">*</span></div>
+                  <div class="valuePill"><span id="extraStressOut">1/10</span></div>
+                  <div class="stress-description" id="extraStressDesc">not stressed at all</div>
+                </div>
+                <div class="rangeRow">
+                  <div class="slider-wrapper">
+                    <span style="font-size:11px; color:var(--muted);">1</span>
+                    <input id="qExtraStressRange" type="range" min="1" max="10" step="1" value="1" />
+                    <span style="font-size:11px; color:var(--muted);">10</span>
+                  </div>
+                </div>
+
+                <details class="scale">
+                  <summary>Stress level description</summary>
+                  <ol class="scaleList">
+                    <li>Not stressed at all</li>
+                    <li>Barely stressed once in a while</li>
+                    <li>A little stressed once in a while</li>
+                    <li>Stressed once in a while</li>
+                    <li>Stressed at times but manageable</li>
+                    <li>Stressed frequently but manageable</li>
+                    <li>Very stressed at times but manageable</li>
+                    <li>Very stressed frequently but manageable</li>
+                    <li>Very stressed frequently, need help</li>
+                    <li>Extremely stressed every day, need help</li>
+                  </ol>
+                </details>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Activities -->
+          <div class="sectionTitle"><span class="dot"></span>Music Activities</div>
+          <div class="choices" id="musicChoices"></div>
+          <div class="othersBox hidden" id="musicOthersBox">
+            <div class="label" style="margin-bottom:6px;">Other music activities (please specify)</div>
+            <input class="textInput" id="musicOthersInput" type="text" placeholder="Type your answer..." />
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="sectionTitle"><span class="dot"></span>Physical Activities</div>
+          <div class="choices" id="physicalChoices"></div>
+          <div class="othersBox hidden" id="physicalOthersBox">
+            <div class="label" style="margin-bottom:6px;">Other physical activities (please specify)</div>
+            <input class="textInput" id="physicalOthersInput" type="text" placeholder="Type your answer..." />
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="sectionTitle"><span class="dot"></span>Digital Activities</div>
+          <div class="choices" id="digitalChoices"></div>
+          <div class="othersBox hidden" id="digitalOthersBox">
+            <div class="label" style="margin-bottom:6px;">Other digital activities (please specify)</div>
+            <input class="textInput" id="digitalOthersInput" type="text" placeholder="Type your answer..." />
+          </div>
+
+          <div class="actions">
+            <div class="btnRow">
+              <button class="primary" id="calcBtn">Calculate Reaction Time</button>
+              <button class="danger" id="resetBtn">Reset</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Result with distribution marker -->
+      <div class="card fullWidthCard" id="resultBox" style="display:none;">
+        <div class="inner">
+          <div class="sectionTitle"><span class="dot"></span>Your Result</div>
+          
+          <div id="resultContent"></div>
+          
+          <!-- Distribution bar with marker -->
+          <div class="distribution-container" id="distributionContainer">
+            <div class="marker" id="marker">▼</div>
+            <div class="marker-line" id="markerLine"></div>
+            <div class="distribution-bar"></div>
+            <div class="distribution-labels">
+              <span>⚡ Extreme Fast</span>
+              <span>🏃 Very Fast</span>
+              <span>👍 Fast</span>
+              <span>✅ Average</span>
+              <span>⏳ Slow</span>
+              <span>🐢 Very Slow</span>
+              <span>💤 Extreme Slow</span>
+            </div>
+          </div>
+          
+          <div class="percentile-info" id="percentileInfo"></div>
+          <div class="interpHint" id="resultHint"></div>
+          <div class="model-info">ElasticNet (α=0.01, l1=0.5) | Log-transformed | R² = 0.456</div>
+        </div>
+      </div>
+
+      <!-- How Our Model Works Section -->
+      <div class="card fullWidthCard">
+        <div class="inner">
+          <div class="sectionTitle"><span class="dot"></span>How Our Model Works</div>
+          
+          <div class="log-explanation">
+            <div class="log-title">
+              <span>📐</span> From Linear to Exponential: The Math Behind the Prediction
+            </div>
+            
+            <div class="log-grid">
+              <!-- Left column: Formula explanation -->
+              <div class="log-card">
+                <h4>📊 The Formula</h4>
+                <p>Instead of predicting reaction time directly, we predict its natural logarithm:</p>
+                
+                <div class="formula-box">
+                  <strong>log(y) = 0.3189 + β₁x₁ + β₂x₂ + ...</strong>
+                </div>
+                
+                <p>Then convert back using exponential function:</p>
+                
+                <div class="formula-box">
+                  <strong>y = e<sup>log(y)</sup></strong>
+                </div>
+                
+                <div class="example-row">
+                  <span class="example-label">Intercept (log scale):</span>
+                  <span class="example-value">0.3189</span>
+                </div>
+                <div class="example-row">
+                  <span class="example-label">Base reaction time (e<sup>0.3189</sup>):</span>
+                  <span class="example-value">1.375 seconds</span>
+                </div>
+              </div>
+              
+              <!-- Right column: Why it matters -->
+              <div class="log-card">
+                <h4>✨ Why Log Transform?</h4>
+                
+                <ul class="benefit-list">
+                  <li><strong>Always positive predictions</strong> - Reaction time can't be negative</li>
+                  <li><strong>Handles multiplicative effects</strong> - Stress doesn't add seconds, it multiplies them</li>
+                  <li><strong>Normalizes distribution</strong> - Makes skewed data more "bell-shaped"</li>
+                  <li><strong>Improves model stability</strong> - Reduces impact of outliers</li>
+                </ul>
+                
+                <div class="formula-box" style="margin-top: 10px;">
+                  <span style="color: var(--muted);">log(y) = 0.3189 + </span><br>
+                  <span style="color: #6ea8ff;">0.0481 · Music</span><span style="color: var(--muted);"> + </span><br>
+                  <span style="color: #9b7bff;">0.0480 · StressHW</span><span style="color: var(--muted);"> + </span><br>
+                  <span style="color: #b57aff;">0.0384 · Caffeine</span><span style="color: var(--muted);"> + </span><br>
+                  <span style="color: #ae8eff;">0.0069 · Age</span><span style="color: var(--muted);"> + </span><br>
+                  <span style="color: #c392ff;">0.0043 · Activity(hrs)</span><span style="color: var(--muted);"> + </span><br>
+                  <span style="color: #ab99ff;">(-0.0033) · SportActivity</span><span style="color: var(--muted);"> + </span><br>
+                  <span style="color: #c6a6ff;">0.0020 · StressExtra</span><span style="color: var(--muted);"> </span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Examples with your calculation -->
+            <div style="margin-top: 15px;">
+              <h4 style="font-size: 13px; margin: 10px 0 5px; color: var(--accent);">🔍 Real Example from Your Calculation</h4>
+              
+              <div class="log-grid">
+                <div class="log-card">
+                  <h4>Step 1: Add up effects (log scale)</h4>
+                  <div id="logExample" style="font-family: monospace; font-size: 12px; line-height: 1.8;">
+                    <!-- This will be populated dynamically after calculation -->
+                    <span class="example-label">Intercept:</span> 0.3189<br>
+                    <span class="example-label">+ Stress (5):</span> 0.2398<br>
+                    <span class="example-label">+ Coffee (1):</span> 0.0384<br>
+                    <span class="example-label">+ Music:</span> 0.0481<br>
+                    <span class="example-label">= log(y):</span> <strong id="logSumExample">0.6452</strong>
+                  </div>
+                </div>
+                
+                <div class="log-card">
+                  <h4>Step 2: Apply exponential</h4>
+                  <div style="font-family: monospace; font-size: 14px; line-height: 2; text-align: center;">
+                    <div>y = e<sup><span id="logExpExample">0.6452</span></sup></div>
+                    <div style="font-size: 20px; margin: 10px 0;">= <strong id="expExample">1.906</strong> seconds</div>
+                    <div style="font-size: 11px; color: var(--muted);">This ensures the result is always positive and handles multiplicative relationships</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Key insight -->
+              <div style="background: rgba(110,168,255,0.1); border-left: 3px solid var(--accent); padding: 10px; margin-top: 10px; border-radius: 0 8px 8px 0;">
+                <p style="margin: 0; font-size: 12px;">
+                  <strong>💡 Key insight:</strong> A 0.1 increase in log(y) means multiplying reaction time by e<sup>0.1</sup> ≈ 1.105 (10.5% increase), 
+                  not adding 0.1 seconds. This matches reality: going from 1.5s → 1.66s is a bigger jump than 2.5s → 2.6s.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  // =========================
+  // Survey state
+  // =========================
+  const survey = {
+    name: "",
+    gender: "",
+    age: null,
+    coffeeCups: 0,
+    sleepHours: 8,
+    acadStress: 1,
+    extraStress: 1
+  };
+
+  // Stress descriptions mapping
+  const STRESS_DESCRIPTIONS = {
+    1: "Not stressed at all",
+    2: "Barely stressed once in a while",
+    3: "A little stressed once in a while",
+    4: "Stressed once in a while",
+    5: "Stressed at times but manageable",
+    6: "Stressed frequently but manageable",
+    7: "Very stressed at times but manageable",
+    8: "Very stressed frequently but manageable",
+    9: "Very stressed frequently, need help",
+    10: "Extremely stressed every day, need help"
+  };
+
+  function setRadioVisual(containerId) {
+    const wrap = document.getElementById(containerId);
+    if (!wrap) return;
+    Array.from(wrap.querySelectorAll(".radioChip")).forEach(chip => {
+      const input = chip.querySelector("input");
+      chip.dataset.checked = (input && input.checked) ? "true" : "false";
+    });
+  }
+
+  function clampInt(x, min, max) {
+    const n = Number(x);
+    if (Number.isNaN(n)) return min;
+    const rounded = Math.round(n);
+    return Math.max(min, Math.min(max, rounded));
+  }
+
+  function clampNum(x, min, max) {
+    const n = Number(x);
+    if (Number.isNaN(n)) return min;
+    return Math.max(min, Math.min(max, n));
+  }
+
+  // UPDATED: Show both number and description
+  function updateStressPill(kind, v) {
+    const n = clampInt(v, 1, 10);
+    const description = STRESS_DESCRIPTIONS[n] || "";
+    
+    if (kind === "acad") {
+      document.getElementById("acadStressOut").textContent = `${n}/10`;
+      document.getElementById("acadStressDesc").textContent = description;
+    } else {
+      document.getElementById("extraStressOut").textContent = `${n}/10`;
+      document.getElementById("extraStressDesc").textContent = description;
+    }
+  }
+
+  // Q1 Name
+  const qName = document.getElementById("qName");
+  qName.addEventListener("input", () => { survey.name = qName.value.trim(); });
+
+  // Q2 Gender
+  Array.from(document.querySelectorAll('#qGender .radioChip')).forEach(chip => {
+    chip.addEventListener("click", () => {
+      const input = chip.querySelector("input");
+      input.checked = true;
+      survey.gender = input.value;
+      setRadioVisual("qGender");
+    });
+  });
+
+  // Q3 Age
+  const qAgeNum = document.getElementById("qAgeNum");
+  qAgeNum.addEventListener("input", () => {
+    const v = qAgeNum.value === "" ? null : clampInt(qAgeNum.value, 5, 100);
+    survey.age = v;
+  });
+
+  // Q4 Coffee
+  Array.from(document.querySelectorAll('#qCoffee .radioChip')).forEach(chip => {
+    chip.addEventListener("click", () => {
+      const input = chip.querySelector("input");
+      input.checked = true;
+      survey.coffeeCups = parseFloat(input.value);
+      setRadioVisual("qCoffee");
+    });
+  });
+
+  // Q5 Sleep (slider only)
+  const sleepRange = document.getElementById("qSleepRange");
+  const sleepOut = document.getElementById("sleepOut");
+  sleepRange.addEventListener("input", () => {
+    const v = parseFloat(sleepRange.value);
+    survey.sleepHours = v;
+    sleepOut.textContent = v.toFixed(1);
+  });
+
+  // Q6 Academic stress - UPDATED with description
+  const acadRange = document.getElementById("qAcadStressRange");
+  acadRange.addEventListener("input", () => {
+    const v = parseInt(acadRange.value, 10);
+    survey.acadStress = v;
+    updateStressPill("acad", v);
+  });
+
+  // Q7 Extra stress - UPDATED with description
+  const extraRange = document.getElementById("qExtraStressRange");
+  extraRange.addEventListener("input", () => {
+    const v = parseInt(extraRange.value, 10);
+    survey.extraStress = v;
+    updateStressPill("extra", v);
+  });
+
+  // Init visuals
+  setRadioVisual("qGender");
+  setRadioVisual("qCoffee");
+  updateStressPill("acad", survey.acadStress);
+  updateStressPill("extra", survey.extraStress);
+
+  // =========================
+  // Activities
+  // =========================
+  const GROUPS = {
+    "Music": ["Choir", "Drums", "Guitar", "Piano", "Violin", "Others"],
+    "Physical activities": ["Basketball", "Tennis", "Track", "Swimming", "Running", "Cycling", "Weightlifting / Gym", "Badminton", "Soccer", "Others"],
+    "Digital activities": ["Video Games", "Streaming / Watching Videos", "Social Media", "Coding / Programming", "Online Courses", "Others"]
+  };
+
+  const selected = {
+    "Music": new Set(),
+    "Physical activities": new Set(),
+    "Digital activities": new Set()
+  };
+
+  const activityHours = {};
+
+  const othersText = {
+    "Music": "",
+    "Physical activities": "",
+    "Digital activities": ""
+  };
+
+  // =========================
+  // ELASTICNET MODEL COEFFICIENTS
+  // =========================
+  const INTERCEPT = 0.3188661958;  // Log-scale intercept
+  
+  const COEF = {
+    // Numerical variables
+    stressHW: 0.04795925395,      // Academic stress
+    caffeineCups: 0.03835374566,  // Coffee intake
+    age: 0.006888825777,          // Age
+    activityHrs: 0.004320635898,  // Activity hours
+    stressExtraC: 0.002031828947, // Extra-curricular stress
+    
+    // Categorical variables - activity types
+    typeMusic: 0.04807836607,     // Music activities (positive)
+    typeSportA: -0.003315923573,  // Physical activities (negative effect)
+    typeSportE: 0,                 // Digital activities (zero)
+    
+    // Zero coefficients
+    sleepHrs: 0,
+    totalActivityHrs: 0,
+    sexMale: 0,
+    sexFemale: 0,
+    typeMissing: 0,
+    majorMissing: 0
+  };
+
+  // =========================
+  // RESPONSE CATEGORIES with exact thresholds
+  // =========================
+  const RESPONSE_CATEGORIES = [
+    {
+      name: "Extremely Fast",
+      icon: "⚡",
+      min: 0,
+      max: 1.5,
+      description: "Exceptionally quick response, faster than most people",
+      characteristics: [
+        "Near theoretical minimum",
+        "Excellent focus",
+        "Quick decision-making"
+      ],
+      color: "#6ea8ff"
+    },
+    {
+      name: "Very Fast",
+      icon: "🏃",
+      min: 1.5,
+      max: 1.7,
+      description: "Above-average response speed",
+      characteristics: [
+        "Good concentration",
+        "Above-average alertness",
+        "Quick reflexes"
+      ],
+      color: "#84b5ff"
+    },
+    {
+      name: "Fast",
+      icon: "👍",
+      min: 1.7,
+      max: 1.9,
+      description: "Slightly faster than average",
+      characteristics: [
+        "Good reaction ability",
+        "Performs well in daily activities"
+      ],
+      color: "#9b7bff"
+    },
+    {
+      name: "Average",
+      icon: "✅",
+      min: 1.9,
+      max: 2.1,
+      description: "Typical reaction time for most people",
+      characteristics: [
+        "Normal alertness level",
+        "Suitable for daily activities",
+        "Most people fall in this range"
+      ],
+      color: "#b57aff"
+    },
+    {
+      name: "Slightly Slow",
+      icon: "⏳",
+      min: 2.1,
+      max: 2.3,
+      description: "Slightly below average",
+      characteristics: [
+        "May be slightly tired",
+        "May be mildly distracted",
+        "Still within normal range"
+      ],
+      color: "#d47aff"
+    },
+    {
+      name: "Slow",
+      icon: "🐢",
+      min: 2.3,
+      max: 2.6,
+      description: "Slower than average - possible fatigue",
+      characteristics: [
+        "Signs of fatigue",
+        "May need a break",
+        "Working on complex tasks"
+      ],
+      color: "#f47a7a"
+    },
+    {
+      name: "Very Slow",
+      icon: "💤",
+      min: 2.6,
+      max: Infinity,
+      description: "Significantly slower response - needs attention",
+      characteristics: [
+        "High fatigue level",
+        "Strongly recommend taking a break",
+        "Avoid activities requiring quick reactions"
+      ],
+      color: "#ff5a5a"
+    }
+  ];
+
+  function keyOf(group, item){ return `${group}::${item}`; }
+
+  function chip(label, group) {
+    const el = document.createElement("div");
+    el.className = "chip";
+    el.dataset.selected = "false";
+    el.setAttribute("role", "button");
+    el.setAttribute("tabindex", "0");
+    el.setAttribute("aria-pressed", "false");
+
+    const left = document.createElement("span");
+    left.className = "chipLeft";
+
+    const mark = document.createElement("span");
+    mark.className = "mark";
+
+    const text = document.createElement("span");
+    text.className = "chipName";
+    text.textContent = label;
+
+    left.appendChild(mark);
+    left.appendChild(text);
+
+    // Inline hour input
+    const hourWrap = document.createElement("span");
+    hourWrap.className = "hourInlineWrap hourDisabled";
+    hourWrap.dataset.hourwrap = "true";
+
+    const hourInput = document.createElement("input");
+    hourInput.className = "hourInlineInput";
+    hourInput.type = "number";
+    hourInput.min = "0";
+    hourInput.max = "16";
+    hourInput.step = "0.25";
+    hourInput.value = "1";
+    hourInput.inputMode = "decimal";
+    hourInput.setAttribute("aria-label", `Hours for ${label}`);
+
+    const hourUnit = document.createElement("span");
+    hourUnit.className = "hourInlineUnit";
+    hourUnit.textContent = "hr";
+
+    // Prevent event bubbling
+    ["click","mousedown","pointerdown","touchstart","keydown"].forEach(evt=>{
+      hourInput.addEventListener(evt, (e)=> e.stopPropagation());
+    });
+
+    ["click","mousedown","pointerdown","touchstart","keydown"].forEach(evt=>{
+      hourWrap.addEventListener(evt, (e)=> e.stopPropagation());
+    });
+
+    hourInput.addEventListener("input", () => {
+      const k = keyOf(group, label);
+      const v = Number(hourInput.value);
+      if (!Number.isFinite(v)) return;
+      activityHours[k] = clampNum(v, 0, 16);
+      hideResult();
+    });
+
+    hourWrap.appendChild(hourInput);
+    hourWrap.appendChild(hourUnit);
+
+    left.appendChild(hourWrap);
+    el.appendChild(left);
+
+    el.addEventListener("click", () => toggle(label, group));
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggle(label, group);
+      }
+    });
+
+    return el;
+  }
+
+  function setChipSelected(container, valueSet, groupName) {
+    Array.from(container.children).forEach(el => {
+      const name = el.querySelector(".chipName").textContent;
+      const isSel = valueSet.has(name);
+      el.dataset.selected = isSel ? "true" : "false";
+      el.setAttribute("aria-pressed", isSel ? "true" : "false");
+
+      const wrap = el.querySelector('[data-hourwrap="true"]');
+      if (!wrap) return;
+
+      const input = wrap.querySelector("input");
+      const k = keyOf(groupName, name);
+
+      if (isSel) {
+        wrap.classList.remove("hourDisabled");
+        input.disabled = false;
+
+        if (typeof activityHours[k] !== "number") activityHours[k] = 1;
+        input.value = String(clampNum(activityHours[k], 0, 16));
+      } else {
+        wrap.classList.add("hourDisabled");
+        input.disabled = true;
+      }
+    });
+  }
+
+  function renderGroup(groupName, containerId) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    (GROUPS[groupName] || []).forEach(item => container.appendChild(chip(item, groupName)));
+    setChipSelected(container, selected[groupName], groupName);
+  }
+
+  function setOthersVisibility(groupName) {
+    const show = selected[groupName].has("Others");
+    if (groupName === "Music") document.getElementById("musicOthersBox").classList.toggle("hidden", !show);
+    if (groupName === "Physical activities") document.getElementById("physicalOthersBox").classList.toggle("hidden", !show);
+    if (groupName === "Digital activities") document.getElementById("digitalOthersBox").classList.toggle("hidden", !show);
+  }
+
+  function hideResult() {
+    const box = document.getElementById("resultBox");
+    box.style.display = "none";
+  }
+
+  function toggle(item, groupName) {
+    if (!selected[groupName]) return;
+
+    const k = keyOf(groupName, item);
+
+    if (!selected[groupName].has(item)) {
+      selected[groupName].add(item);
+      if (typeof activityHours[k] !== "number") activityHours[k] = 1;
+
+      if (item === "Others") setOthersVisibility(groupName);
+
+      const map = {
+        "Music": "musicChoices",
+        "Physical activities": "physicalChoices",
+        "Digital activities": "digitalChoices"
+      };
+      setChipSelected(document.getElementById(map[groupName]), selected[groupName], groupName);
+      hideResult();
+      return;
+    }
+
+    selected[groupName].delete(item);
+
+    if (item === "Others") setOthersVisibility(groupName);
+
+    const map = {
+      "Music": "musicChoices",
+      "Physical activities": "physicalChoices",
+      "Digital activities": "digitalChoices"
+    };
+    setChipSelected(document.getElementById(map[groupName]), selected[groupName], groupName);
+
+    hideResult();
+  }
+
+  document.getElementById("musicOthersInput").addEventListener("input", (e) => { othersText["Music"] = e.target.value; });
+  document.getElementById("physicalOthersInput").addEventListener("input", (e) => { othersText["Physical activities"] = e.target.value; });
+  document.getElementById("digitalOthersInput").addEventListener("input", (e) => { othersText["Digital activities"] = e.target.value; });
+
+  // =========================
+  // Validation
+  // =========================
+  function clearErrors(){
+    document.getElementById("errorBanner").style.display = "none";
+    ["fieldName","fieldGender","fieldAge","fieldCoffee","fieldSleep","fieldAcadStress","fieldExtraStress"].forEach(id=>{
+      document.getElementById(id).classList.remove("isError");
+    });
+    document.getElementById("qGender").classList.remove("radioError");
+    document.getElementById("qCoffee").classList.remove("radioError");
+  }
+
+  function showErrorBanner(){
+    document.getElementById("errorBanner").style.display = "block";
+  }
+
+  function firstInvalidScrollTo(el){
+    if (!el) return;
+    el.scrollIntoView({ behavior:"smooth", block:"center" });
+  }
+
+  function validateRequired(){
+    clearErrors();
+
+    const invalidEls = [];
+
+    // 1) name
+    const nameVal = (qName.value || "").trim();
+    if (!nameVal) {
+      document.getElementById("fieldName").classList.add("isError");
+      invalidEls.push(document.getElementById("fieldName"));
+    }
+
+    // 2) gender
+    const genderChecked = document.querySelector('input[name="gender"]:checked');
+    if (!genderChecked) {
+      document.getElementById("fieldGender").classList.add("isError");
+      document.getElementById("qGender").classList.add("radioError");
+      invalidEls.push(document.getElementById("fieldGender"));
+    }
+
+    // 3) age
+    const ageRaw = qAgeNum.value;
+    if (ageRaw === "" || Number.isNaN(Number(ageRaw))) {
+      document.getElementById("fieldAge").classList.add("isError");
+      invalidEls.push(document.getElementById("fieldAge"));
+    }
+
+    // 4) coffee
+    const coffeeChecked = document.querySelector('input[name="coffee"]:checked');
+    if (!coffeeChecked) {
+      document.getElementById("fieldCoffee").classList.add("isError");
+      document.getElementById("qCoffee").classList.add("radioError");
+      invalidEls.push(document.getElementById("fieldCoffee"));
+    }
+
+    if (invalidEls.length > 0) {
+      showErrorBanner();
+      firstInvalidScrollTo(invalidEls[0]);
+      return false;
+    }
+
+    // Sync survey state
+    survey.name = nameVal;
+    survey.gender = genderChecked ? genderChecked.value : "";
+    survey.age = clampInt(ageRaw, 5, 100);
+    survey.coffeeCups = coffeeChecked ? parseFloat(coffeeChecked.value) : 0;
+    survey.sleepHours = parseFloat(sleepRange.value);
+    survey.acadStress = parseInt(acadRange.value, 10);
+    survey.extraStress = parseInt(extraRange.value, 10);
+
+    return true;
+  }
+
+  // =========================
+  // Helper functions
+  // =========================
+  function sumTotalActivityHrs(){
+    let total = 0;
+    Object.keys(activityHours).forEach(k => {
+      const v = activityHours[k];
+      if (typeof v === "number" && Number.isFinite(v)) total += v;
+    });
+    return total;
+  }
+
+  function findMaxActivityHour() {
+    let maxHour = 0;
+    Object.keys(activityHours).forEach(k => {
+      const v = activityHours[k];
+      if (typeof v === "number" && Number.isFinite(v) && v > maxHour) {
+        maxHour = v;
+      }
+    });
+    return maxHour;
+  }
+
+  function anyActivitySelected(){
+    return Object.keys(selected).some(g => selected[g].size > 0);
+  }
+
+  // =========================
+  // Calculate percentile and marker position
+  // =========================
+  function getMarkerPosition(time) {
+    // Distribution thresholds
+    const thresholds = [1.5, 1.7, 1.9, 2.1, 2.3, 2.6, 3.5];
+    
+    if (time <= 1.5) {
+      // In Extremely Fast zone (0-14.28%)
+      return (time / 1.5) * 14.28;
+    } else if (time <= 1.7) {
+      // In Very Fast zone (14.28-28.56%)
+      return 14.28 + ((time - 1.5) / 0.2) * 14.28;
+    } else if (time <= 1.9) {
+      // In Fast zone (28.56-42.84%)
+      return 28.56 + ((time - 1.7) / 0.2) * 14.28;
+    } else if (time <= 2.1) {
+      // In Average zone (42.84-57.12%)
+      return 42.84 + ((time - 1.9) / 0.2) * 14.28;
+    } else if (time <= 2.3) {
+      // In Slightly Slow zone (57.12-71.4%)
+      return 57.12 + ((time - 2.1) / 0.2) * 14.28;
+    } else if (time <= 2.6) {
+      // In Slow zone (71.4-85.68%)
+      return 71.4 + ((time - 2.3) / 0.3) * 14.28;
+    } else {
+      // In Very Slow zone (85.68-100%)
+      const maxDisplay = 3.5; // Cap at 3.5 for display
+      const cappedTime = Math.min(time, maxDisplay);
+      return 85.68 + ((cappedTime - 2.6) / 0.9) * 14.32;
+    }
+  }
+
+  function getPercentileDescription(time) {
+    if (time < 1.5) return "Faster than 95% of people";
+    if (time < 1.7) return "Faster than 80% of people";
+    if (time < 1.9) return "Faster than 60% of people";
+    if (time < 2.1) return "Average range (40th-60th percentile)";
+    if (time < 2.3) return "Slower than 60% of people";
+    if (time < 2.6) return "Slower than 80% of people";
+    return "Slower than 95% of people";
+  }
+
+  // =========================
+  // Main calculation function
+  // =========================
+  function calculate() {
+    if (!validateRequired()) {
+      hideResult();
+      return;
+    }
+
+    // Calculate log-scale prediction
+    let logY = INTERCEPT;
+
+    // Numerical variables
+    logY += COEF.stressHW * survey.acadStress;
+    logY += COEF.caffeineCups * survey.coffeeCups;
+    logY += COEF.age * survey.age;
+    logY += COEF.stressExtraC * survey.extraStress;
+    
+    // Activity hours - using max activity hour
+    const maxHour = findMaxActivityHour();
+    logY += COEF.activityHrs * maxHour;
+    
+    // Sleep (zero coefficient)
+    logY += COEF.sleepHrs * survey.sleepHours;
+
+    // Activity types
+    if (selected["Music"].size > 0) logY += COEF.typeMusic;
+    if (selected["Physical activities"].size > 0) logY += COEF.typeSportA;
+    if (selected["Digital activities"].size > 0) logY += COEF.typeSportE;
+
+    // Gender (zero coefficients)
+    if (survey.gender === "Male") logY += COEF.sexMale;
+    if (survey.gender === "Female") logY += COEF.sexFemale;
+
+    // Missing activities penalty (zero)
+    if (!anyActivitySelected()) {
+      logY += COEF.typeMissing;
+    }
+
+    // Convert to actual response time y = exp(logY)
+    let responseTime = Math.exp(logY);
+    
+    // Round to 3 decimal places
+    responseTime = Math.round(responseTime * 1000) / 1000;
+    
+    // Determine category
+    let category = RESPONSE_CATEGORIES[0];
+    for (const cat of RESPONSE_CATEGORIES) {
+      if (responseTime < cat.max) {
+        category = cat;
+        break;
+      }
+    }
+    
+    // Get marker position (percentage from left)
+    const markerPos = getMarkerPosition(responseTime);
+    
+    // Get percentile description
+    const percentileDesc = getPercentileDescription(responseTime);
+    
+    // Build result HTML - REMOVED activity effects
+    let resultHtml = `
+      <div class="time-value" style="color: ${category.color}">
+        ${category.icon} ${responseTime} seconds
+      </div>
+      <div class="result-category" style="color: ${category.color}">${category.name}</div>
+      <div class="result-description">${category.description}</div>
+      <ul class="result-characteristics">
+    `;
+    
+    category.characteristics.forEach(char => {
+      resultHtml += `<li>${char}</li>`;
+    });
+    
+    resultHtml += `</ul>`;
+    
+    document.getElementById("resultContent").innerHTML = resultHtml;
+    
+    // Update marker position
+    document.getElementById("marker").style.left = markerPos + "%";
+    document.getElementById("markerLine").style.left = markerPos + "%";
+    
+    // Update percentile info
+    document.getElementById("percentileInfo").innerHTML = 
+      `📍 <strong>Your position:</strong> ${percentileDesc}`;
+    
+    // Hint with additional info - REMOVED activity effects
+    const totalAct = sumTotalActivityHrs();
+    
+    document.getElementById("resultHint").innerHTML = 
+      `📊 Total activity: ${totalAct.toFixed(2)} hours<br>` +
+      `⭐ Main activity: ${maxHour.toFixed(2)} hours<br>` +
+      `📈 Log prediction: ${logY.toFixed(4)}`;
+
+    document.getElementById("resultBox").style.display = "block";
+    
+    // Update log explanation section with current values
+    updateLogExplanation(logY, responseTime, maxHour);
+    
+    // Scroll to result
+    document.getElementById("resultBox").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  
+  // Update log explanation with current values
+  function updateLogExplanation(logY, responseTime, maxHour) {
+    // Build the log sum string dynamically
+    let logSumHtml = `
+      <span class="example-label">Intercept:</span> ${INTERCEPT.toFixed(4)}<br>
+      <span class="example-label">+ Stress (${survey.acadStress}):</span> ${(COEF.stressHW * survey.acadStress).toFixed(4)}<br>
+      <span class="example-label">+ Coffee (${survey.coffeeCups}):</span> ${(COEF.caffeineCups * survey.coffeeCups).toFixed(4)}<br>
+    `;
+    
+    if (survey.age) {
+      logSumHtml += `<span class="example-label">+ Age (${survey.age}):</span> ${(COEF.age * survey.age).toFixed(4)}<br>`;
+    }
+    
+    if (selected["Music"].size > 0) {
+      logSumHtml += `<span class="example-label">+ Music:</span> ${COEF.typeMusic.toFixed(4)}<br>`;
+    }
+    
+    if (selected["Physical activities"].size > 0) {
+      logSumHtml += `<span class="example-label">+ Physical:</span> ${COEF.typeSportA.toFixed(4)}<br>`;
+    }
+    
+    if (maxHour > 0) {
+      logSumHtml += `<span class="example-label">+ Activity (${maxHour.toFixed(2)}h):</span> ${(COEF.activityHrs * maxHour).toFixed(4)}<br>`;
+    }
+    
+    logSumHtml += `<span class="example-label">= log(y):</span> <strong>${logY.toFixed(4)}</strong>`;
+    
+    document.getElementById("logExample").innerHTML = logSumHtml;
+    //document.getElementById("logSumExample").textContent = logY.toFixed(4);
+    document.getElementById("logExpExample").textContent = logY.toFixed(4);
+    document.getElementById("expExample").textContent = responseTime.toFixed(3);
+  }
+
+  function resetAll() {
+    clearErrors();
+
+    survey.name = "";
+    survey.gender = "";
+    survey.age = null;
+    survey.coffeeCups = 0;
+    survey.sleepHours = 8;
+    survey.acadStress = 1;
+    survey.extraStress = 1;
+
+    document.getElementById("qName").value = "";
+    document.getElementById("qAgeNum").value = "";
+
+    document.querySelectorAll('input[name="gender"]').forEach(r => r.checked = false);
+    document.querySelectorAll('input[name="coffee"]').forEach(r => r.checked = false);
+    setRadioVisual("qGender");
+    setRadioVisual("qCoffee");
+
+    // Reset sliders and pills
+    sleepRange.value = "8";
+    sleepOut.textContent = "8.0";
+    acadRange.value = "1";
+    extraRange.value = "1";
+    updateStressPill("acad", 1);
+    updateStressPill("extra", 1);
+
+    Object.keys(selected).forEach(g => selected[g].clear());
+    Object.keys(activityHours).forEach(k => delete activityHours[k]);
+
+    renderAll();
+
+    othersText["Music"] = "";
+    othersText["Physical activities"] = "";
+    othersText["Digital activities"] = "";
+
+    document.getElementById("musicOthersInput").value = "";
+    document.getElementById("physicalOthersInput").value = "";
+    document.getElementById("digitalOthersInput").value = "";
+
+    document.getElementById("musicOthersBox").classList.add("hidden");
+    document.getElementById("physicalOthersBox").classList.add("hidden");
+    document.getElementById("digitalOthersBox").classList.add("hidden");
+
+    hideResult();
+  }
+
+  function renderAll() {
+    renderGroup("Music", "musicChoices");
+    renderGroup("Physical activities", "physicalChoices");
+    renderGroup("Digital activities", "digitalChoices");
+
+    setOthersVisibility("Music");
+    setOthersVisibility("Physical activities");
+    setOthersVisibility("Digital activities");
+  }
+
+  document.getElementById("calcBtn").addEventListener("click", calculate);
+  document.getElementById("resetBtn").addEventListener("click", resetAll);
+
+  renderAll();
+</script>
+</body>
+</html>
