@@ -563,15 +563,25 @@
       padding: 0;
       margin: 5px 0;
     }
-    
+
     .benefit-list li {
-      margin: 8px 0;
-      font-size: 12px;
       display: flex;
-      align-items: center;
-      gap: 8px;
+      align-items: flex-start;  /* 关键 */
+      gap: 12px;
+      font-size: 11.5px;
+      line-height: 18px;
     }
-    
+
+    .benefit-left {
+      width: 180px;   /* 固定宽度 */
+      font-weight: 600;
+    }
+
+    .benefit-right {
+      flex: 1;
+      color: var(--muted);
+    }
+
     .benefit-list li::before {
       content: "✓";
       color: var(--accent);
@@ -857,10 +867,22 @@
                 <h4>✨ Why Log Transform?</h4>
                 
                 <ul class="benefit-list">
-                  <li><strong>Always positive predictions</strong>   Reaction time can't be negative</li>
-                  <li><strong>Handles multiplicative effects</strong>   Stress doesn't add seconds, it multiplies them</li>
-                  <li><strong>Normalizes distribution</strong>   Makes skewed data more "bell-shaped"</li>
-                  <li><strong>Improves model stability</strong>   Reduces impact of outliers</li>
+                  <li>
+                    <span class="benefit-left">Always positive predictions</span>
+                    <span class="benefit-right">Reaction time can't be negative</span>
+                  </li>
+                  <li>
+                    <span class="benefit-left">Handles multiplicative effects</span>
+                    <span class="benefit-right">Stress doesn't add seconds, it multiplies them</span>
+                  </li>
+                  <li>
+                    <span class="benefit-left">Normalizes distribution</span>
+                    <span class="benefit-right">Makes skewed data more "bell-shaped"</span>
+                  </li>
+                  <li>
+                    <span class="benefit-left">Improves model stability</span>
+                    <span class="benefit-right">Reduces impact of outliers</span>
+                  </li>
                 </ul>
                 
                 <div class="formula-box" style="margin-top: 10px;">
