@@ -1273,7 +1273,7 @@
     hourInput.className = "hourInlineInput";
     hourInput.type = "number";
     hourInput.min = "0";
-    hourInput.max = "16";
+    hourInput.max = "40";
     hourInput.step = "0.25";
     hourInput.value = "1";
     hourInput.inputMode = "decimal";
@@ -1296,7 +1296,7 @@
       const k = keyOf(group, label);
       const v = Number(hourInput.value);
       if (!Number.isFinite(v)) return;
-      activityHours[k] = clampNum(v, 0, 16);
+      activityHours[k] = clampNum(v, 0, 40);
       hideResult();
     });
 
