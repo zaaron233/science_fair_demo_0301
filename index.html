@@ -479,7 +479,7 @@
       padding-top: 8px;
     }
 
-    /* ===== NEW: Log Transform Explanation Section ===== */
+    /* ===== Log Transform Explanation Section ===== */
     .log-explanation {
       margin-top: 20px;
       padding: 15px;
@@ -811,13 +811,13 @@
             <div class="marker-line" id="markerLine"></div>
             <div class="distribution-bar"></div>
             <div class="distribution-labels">
-              <span>⚡ Extreme Fast</span>
+              <span>⚡ Extremely Fast</span>
               <span>🏃 Very Fast</span>
               <span>👍 Fast</span>
               <span>✅ Average</span>
-              <span>⏳ Slow</span>
-              <span>🐢 Very Slow</span>
-              <span>💤 Extreme Slow</span>
+              <span>⏳ Slightly Slow</span>
+              <span>🐢 Slow</span>
+              <span>💤 Extremely Slow</span>
             </div>
           </div>
           
@@ -1093,7 +1093,8 @@
   // =========================
   const GROUPS = {
     "Music": ["Choir", "Drums", "Guitar", "Piano", "Violin", "Others"],
-    "Physical activities": ["Basketball", "Tennis", "Track", "Swimming", "Running", "Cycling", "Weightlifting / Gym", "Badminton", "Soccer", "Others"],
+    // ADDED VOLLEYBALL to Physical activities
+    "Physical activities": ["Basketball", "Tennis", "Track", "Swimming", "Running", "Cycling", "Weightlifting / Gym", "Badminton", "Soccer", "Volleyball", "Others"],
     "Digital activities": ["Video Games", "Streaming / Watching Videos", "Social Media", "Coding / Programming", "Online Courses", "Others"]
   };
 
@@ -1139,7 +1140,7 @@
   };
 
   // =========================
-  // RESPONSE CATEGORIES with exact thresholds
+  // RESPONSE CATEGORIES with exact thresholds — updated descriptions from PDF, last renamed to Extremely Slow
   // =========================
   const RESPONSE_CATEGORIES = [
     {
@@ -1147,11 +1148,11 @@
       icon: "⚡",
       min: 0,
       max: 1.5,
-      description: "Exceptionally quick response, faster than most people",
+      description: "Exceptionally quick response, near theoretical minimum",
       characteristics: [
-        "Near theoretical minimum",
-        "Excellent focus",
-        "Quick decision-making"
+        "Near theoretical minimum — highly efficient synaptic signaling and rapid sensorimotor integration",
+        "Strong performance in rapid decision environments",
+        "Recommendation: Maintain neural efficiency with high-quality sleep, omega-3 intake, and complex motor training"
       ],
       color: "#6ea8ff"
     },
@@ -1160,11 +1161,12 @@
       icon: "🏃",
       min: 1.5,
       max: 1.7,
-      description: "Above-average response speed",
+      description: "Significantly faster than population average in sensorimotor processing",
       characteristics: [
-        "Good concentration",
-        "Above-average alertness",
-        "Quick reflexes"
+        "Significantly faster than population average in sensorimotor processing",
+        "Above-average neurotransmitter signaling speed and cortical processing efficiency",
+        "Good concentration, quick reflexes, strong situational awareness, and fast decision loops",
+        "Recommendation: Preserve performance with regular exercise, reaction drills, and consistent circadian rhythm"
       ],
       color: "#84b5ff"
     },
@@ -1173,10 +1175,12 @@
       icon: "👍",
       min: 1.7,
       max: 1.9,
-      description: "Slightly faster than average",
+      description: "Faster than most individuals in reaction-based tasks",
       characteristics: [
-        "Good reaction ability",
-        "Performs well in daily activities"
+        "Faster than most individuals in reaction-based tasks",
+        "Efficient synaptic transmission and good neural network coordination",
+        "Effective performance in multitasking and moderately high-pressure environments",
+        "Recommendation: Improve further with coordination training, reduced digital fatigue, and hydration"
       ],
       color: "#9b7bff"
     },
@@ -1185,11 +1189,12 @@
       icon: "✅",
       min: 1.9,
       max: 2.1,
-      description: "Typical reaction time for most people",
+      description: "Center of normal reaction-time distribution (most people fall in this range)",
       characteristics: [
-        "Normal alertness level",
-        "Suitable for daily activities",
-        "Most people fall in this range"
+        "Center of normal reaction-time distribution (most people fall in this range)",
+        "Typical neurotransmitter signaling and cognitive processing speed",
+        "Normal alertness level and reliable performance in everyday tasks but may lag in high-speed environments",
+        "Recommendation: Enhance neural efficiency with sleep optimization, aerobic exercise, and attention training"
       ],
       color: "#b57aff"
     },
@@ -1198,11 +1203,12 @@
       icon: "⏳",
       min: 2.1,
       max: 2.3,
-      description: "Slightly below average",
+      description: "Slower than average reaction speed (still within normal range)",
       characteristics: [
-        "May be slightly tired",
-        "May be mildly distracted",
-        "Still within normal range"
+        "Slower than average reaction speed (still within normal range)",
+        "Possible reduced neurotransmission efficiency or temporary cognitive fatigue (tired/distracted)",
+        "Delayed responses during complex or high-stimulus tasks",
+        "Recommendation: Improve signaling efficiency through sleep recovery, reduced stress load, and regular physical activity"
       ],
       color: "#d47aff"
     },
@@ -1211,24 +1217,25 @@
       icon: "🐢",
       min: 2.3,
       max: 2.6,
-      description: "Slower than average - possible fatigue",
+      description: "Moderately slower reaction times compared to most individuals",
       characteristics: [
-        "Signs of fatigue",
-        "May need a break",
-        "Working on complex tasks"
+        "Moderately slower reaction times compared to most individuals",
+        "Slower neural processing or reduced synaptic responsiveness; signs of fatigue, may need a break",
+        "Slower decision loops",
+        "Recommendation: Focus on sleep quality, cardiovascular exercise, balanced nutrition, and work on complex tasks"
       ],
       color: "#f47a7a"
     },
     {
-      name: "Very Slow",
+      name: "Extremely Slow",    // was "Very Slow"
       icon: "💤",
       min: 2.6,
       max: Infinity,
-      description: "Significantly slower response - needs attention",
+      description: "Substantially reduced neural transmission efficiency or high fatigue level",
       characteristics: [
-        "High fatigue level",
-        "Strongly recommend taking a break",
-        "Avoid activities requiring quick reactions"
+        "Substantially reduced neural transmission efficiency or high fatigue level — strongly recommend taking a break",
+        "Difficulty responding quickly in time-sensitive environments",
+        "Recommendation: Prioritize sleep restoration, cognitive recovery, stress reduction; avoid activities requiring quick reactions; seek medical evaluation if persistent"
       ],
       color: "#ff5a5a"
     }
@@ -1274,7 +1281,7 @@
 
     const hourUnit = document.createElement("span");
     hourUnit.className = "hourInlineUnit";
-    hourUnit.textContent = "hr";
+    hourUnit.textContent = "hr/week";   // Changed from "hr" to "hr/week"
 
     // Prevent event bubbling
     ["click","mousedown","pointerdown","touchstart","keydown"].forEach(evt=>{
@@ -1521,7 +1528,7 @@
       // In Slow zone (71.4-85.68%)
       return 71.4 + ((time - 2.3) / 0.3) * 14.28;
     } else {
-      // In Very Slow zone (85.68-100%)
+      // In Extremely Slow zone (85.68-100%)
       const maxDisplay = 3.5; // Cap at 3.5 for display
       const cappedTime = Math.min(time, maxDisplay);
       return 85.68 + ((cappedTime - 2.6) / 0.9) * 14.32;
@@ -1598,7 +1605,7 @@
     // Get percentile description
     const percentileDesc = getPercentileDescription(responseTime);
     
-    // Build result HTML - REMOVED activity effects
+    // Build result HTML
     let resultHtml = `
       <div class="time-value" style="color: ${category.color}">
         ${category.icon} ${responseTime} seconds
@@ -1624,12 +1631,12 @@
     document.getElementById("percentileInfo").innerHTML = 
       `📍 <strong>Your position:</strong> ${percentileDesc}`;
     
-    // Hint with additional info - REMOVED activity effects
+    // Hint with additional info — changed "hours" to "hr/week"
     const totalAct = sumTotalActivityHrs();
     
     document.getElementById("resultHint").innerHTML = 
-      `📊 Total activity: ${totalAct.toFixed(2)} hours<br>` +
-      `⭐ Main activity: ${maxHour.toFixed(2)} hours<br>` +
+      `📊 Total activity: ${totalAct.toFixed(2)} hr/week<br>` +
+      `⭐ Main activity: ${maxHour.toFixed(2)} hr/week<br>` +
       `📈 Log prediction: ${logY.toFixed(4)}`;
 
     document.getElementById("resultBox").style.display = "block";
@@ -1669,7 +1676,6 @@
     logSumHtml += `<span class="example-label">= log(y):</span> <strong>${logY.toFixed(4)}</strong>`;
     
     document.getElementById("logExample").innerHTML = logSumHtml;
-    //document.getElementById("logSumExample").textContent = logY.toFixed(4);
     document.getElementById("logExpExample").textContent = logY.toFixed(4);
     document.getElementById("expExample").textContent = responseTime.toFixed(3);
   }
