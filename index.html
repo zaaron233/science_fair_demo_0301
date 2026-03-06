@@ -1335,7 +1335,7 @@
         input.disabled = false;
 
         if (typeof activityHours[k] !== "number") activityHours[k] = 1;
-        input.value = String(clampNum(activityHours[k], 0, 16));
+        input.value = String(clampNum(activityHours[k], 0, 40));
       } else {
         wrap.classList.add("hourDisabled");
         input.disabled = true;
